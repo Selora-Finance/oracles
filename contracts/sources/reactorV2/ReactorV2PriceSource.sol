@@ -1,9 +1,9 @@
 pragma solidity ^0.8.0;
 
-import "../../PriceSource.sol";
-import "./interfaces/IPoolFactory.sol";
-import "./interfaces/IPool.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import '../../PriceSource.sol';
+import './interfaces/IPoolFactory.sol';
+import './interfaces/IPool.sol';
+import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 
 contract ReactorV2PriceSource is PriceSource {
     IPoolFactory public immutable factory;
@@ -13,7 +13,7 @@ contract ReactorV2PriceSource is PriceSource {
         address _usdt,
         address _usdc,
         address _weth
-    ) PriceSource("Reactor Finance V2", _usdt, _usdc, _weth) {
+    ) PriceSource('Reactor Finance V2', _usdt, _usdc, _weth) {
         factory = _factory;
     }
 

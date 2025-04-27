@@ -5,5 +5,18 @@
   "useTabs": false,
   "trailingComma": "all",
   "tabWidth": 2,
-  "printWidth": 120
+  "printWidth": 120,
+  "plugins": ["prettier-plugin-solidity"],
+  "overrides": [
+    {
+      "files": "**.sol",
+      "options": {
+        "printWidth": 120,
+        "tabWidth": 4,
+        "useTabs": false,
+        "bracketSpacing": false,
+        "parser": "solidity-parse"
+      }
+    }
+  ]
 }

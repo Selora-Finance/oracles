@@ -29,5 +29,8 @@
     "ts-node": ">=8.0.0",
     "typescript": "~5.0.4",
     "viem": "^2.7.6"
+  },
+  "dependencies": {
+    "prettier-plugin-solidity": "^1.4.3"
   }
 }

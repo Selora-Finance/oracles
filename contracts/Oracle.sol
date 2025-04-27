@@ -1,7 +1,7 @@
 pragma solidity ^0.8.0;
 
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {IPriceSource} from "./interfaces/IPriceSource.sol";
+import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
+import {IPriceSource} from './interfaces/IPriceSource.sol';
 
 contract Oracle is Ownable {
     error UnrecognizedPriceSource();
