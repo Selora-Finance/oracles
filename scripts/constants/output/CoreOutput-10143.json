@@ -1,4 +1,4 @@
 {
-  "oracle": "0xf9e1b7c5c7830fc5aa4370c9286cbb4dd74b6b62",
-  "priceSources": ["0xf8386c498648efa09aaf4f90f23b839870972273", "0x59af916efbe8763abfe54943f28289286c4337ff"]
+  "oracle": "0x621185acfc40204a6223b5d7696ebb9bcae6d7b1",
+  "priceSources": ["0x328817b1f942a9ccc331ad160d9c6e7a8c0ee610", "0x5fff458901561e0cb8391510b38c0ed397d30ac3"]
 }
