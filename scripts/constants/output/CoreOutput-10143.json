@@ -1,7 +1,7 @@
 {
-  "oracle": "0x39302c9f33d108b3237971cc348104397b3b19be",
+  "oracle": "0x5caa9d7fac6ef9ff9f50b95008ffb9f6299e8bcd",
   "priceSources": [
-    "0xd28d4ee326cf8b6c6ad46fde214ff0552d9a40a6",
-    "0xc0a03fc6d4e62c6433655a9c93140d2879caab7e"
+    "0x81cc19229e6914d82573bc86dd659ec808f6e6ea",
+    "0x93837d3c1d3662201cc5da0986af75fddf3d316b"
   ]
 }
