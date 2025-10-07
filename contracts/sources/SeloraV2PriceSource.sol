@@ -1,11 +1,11 @@
 pragma solidity ^0.8.0;
 
-import '../../PriceSource.sol';
+import '../PriceSource.sol';
 import './interfaces/IPoolFactory.sol';
 import './interfaces/IPool.sol';
 import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 
-contract ReactorV2PriceSource is PriceSource {
+contract SeloraV2PriceSource is PriceSource {
     IPoolFactory public immutable factory;
 
     constructor(
@@ -13,7 +13,7 @@ contract ReactorV2PriceSource is PriceSource {
         address _usdt,
         address _usdc,
         address _weth
-    ) PriceSource('Reactor Finance V2', _usdt, _usdc, _weth) {
+    ) PriceSource('Selora Finance V2', _usdt, _usdc, _weth) {
         factory = _factory;
     }
 
@@ -25,13 +25,28 @@ contract ReactorV2PriceSource is PriceSource {
         if (_amountIn == 0) return 0;
         if (token0 == token1) return _amountIn;
 
-        address pair = factory.getPool(token0, token1, false); // Search volatile first
+        uint successfulReads = 1; // Start from 1 for division
 
-        if (pair == address(0)) pair = factory.getPool(token0, token1, true); // Search stable next
-        if (pair == address(0)) return 0; // Return 0 if pair is still zero
+        address pairVolatile = factory.getPool(token0, token1, false); // Search volatile first
+        address pairStable = factory.getPool(token0, token1, true); // Search stable after
+        uint256 amountOutVolatile;
+        uint256 amountOutStable;
 
-        IPool pool = IPool(pair);
-        amountOut = pool.getAmountOut(_amountIn, token0);
+        if (pairVolatile != address(0)) {
+            IPool pool = IPool(pairVolatile);
+            amountOutVolatile = pool.getAmountOut(_amountIn, token0);
+            amountOut += amountOutVolatile;
+        }
+
+        if (pairStable != address(0)) {
+            IPool pool = IPool(pairStable);
+            amountOutStable = pool.getAmountOut(_amountIn, token0);
+            amountOut += amountOutStable;
+        }
+
+        if (amountOutStable > 0 && amountOutVolatile > 0) successfulReads += 1;
+
+        amountOut /= successfulReads;
     }
 
     function _getUnitValueInETH(address token) internal view override returns (uint256 amountOut) {

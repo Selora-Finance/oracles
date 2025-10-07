@@ -4,6 +4,7 @@ import { deploy } from './helpers';
 import { createWriteStream, existsSync, mkdirSync } from 'fs';
 import { writeFile } from 'fs/promises';
 import { join } from 'path';
+import { Oracle, SeloraV2PriceSource, SeloraV3PriceSource } from '../artifacts/types';
 
 interface CoreOutput {
   oracle: string;
@@ -16,20 +17,18 @@ async function main() {
   // Constants
   const CONSTANTS = Values[networkId as unknown as keyof typeof Values];
   // Deploy V2 price source
-  const v2PriceSource = await deploy(
-    'ReactorV2PriceSource',
+  const v2PriceSource = await deploy<SeloraV2PriceSource>(
+    'SeloraV2PriceSource',
     undefined,
-    {},
     CONSTANTS.v2Factory,
     CONSTANTS.USDT,
     CONSTANTS.USDC,
     CONSTANTS.WETH,
   );
   // Deploy CL price source
-  const clPriceSource = await deploy(
-    'ReactorCLPriceSource',
+  const clPriceSource = await deploy<SeloraV3PriceSource>(
+    'SeloraV3PriceSource',
     undefined,
-    {},
     CONSTANTS.clFactory,
     CONSTANTS.USDT,
     CONSTANTS.USDC,
@@ -38,7 +37,7 @@ async function main() {
   // Compiled price sources
   const priceSources = [v2PriceSource.address, clPriceSource.address];
   // Deploy oracle
-  const oracle = await deploy('Oracle', undefined, {}, priceSources);
+  const oracle = await deploy<Oracle>('Oracle', undefined, priceSources);
   const output: CoreOutput = {
     oracle: oracle.address,
     priceSources,

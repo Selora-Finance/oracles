@@ -1,11 +1,12 @@
 pragma solidity ^0.8.0;
 
-import '../../PriceSource.sol';
+import '../PriceSource.sol';
 import './interfaces/ICLFactory.sol';
 import './interfaces/ICLPoolConstants.sol';
 import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
+import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
-contract ReactorCLPriceSource is PriceSource {
+contract SeloraV3PriceSource is PriceSource {
     ICLFactory public immutable factory;
 
     constructor(
@@ -13,8 +14,18 @@ contract ReactorCLPriceSource is PriceSource {
         address _usdt,
         address _usdc,
         address _weth
-    ) PriceSource('Reactor Finance CL', _usdt, _usdc, _weth) {
+    ) PriceSource('Selora Finance V3', _usdt, _usdc, _weth) {
         factory = _factory;
+    }
+
+    function _getBalance(address token, address _acc) private view returns (uint256 _balance) {
+        (, bytes memory data) = token.staticcall(abi.encodeWithSelector(IERC20.balanceOf.selector, _acc));
+        _balance = abi.decode(data, (uint256));
+    }
+
+    function _getDecimals(address token) private view returns (uint8 _decimals) {
+        (, bytes memory data) = token.staticcall(abi.encodeWithSelector(bytes4(keccak256(bytes('decimals()')))));
+        _decimals = abi.decode(data, (uint8));
     }
 
     function _deriveAmountOut(
@@ -22,38 +33,25 @@ contract ReactorCLPriceSource is PriceSource {
         address token1,
         uint256 _amountIn
     ) internal view returns (uint256 amountOut) {
-        if (_amountIn == 0) return 0;
-        if (token0 == token1) return _amountIn;
-
         int24[] memory tickSpacings = factory.tickSpacings();
-        uint256 token1Price;
-        uint256 divisor = 1;
-
-        // Iterate through all tick spacings
+        uint successfulIterations = 1; // Start from 1 for division
         for (uint i = 0; i < tickSpacings.length; i++) {
-            address pair = factory.getPool(token0, token1, tickSpacings[i]);
-            if (pair != address(0)) {
-                address _token0 = ICLPoolConstants(pair).token0();
-                address _token1 = ICLPoolConstants(pair).token1();
-                // Balances
-                uint256 _balance0 = ERC20(_token0).balanceOf(pair);
-                uint256 _balance1 = ERC20(_token1).balanceOf(pair);
-                if (_balance0 == 0 || _balance1 == 0) continue; // We don't need 0 balances
-                if (i > 0) divisor += 1;
-                // Find ratio
-                if (_token0 == token0) {
-                    uint8 decimals = ERC20(_token0).decimals();
-                    token1Price += (_balance1 * 10 ** decimals) / _balance0;
-                } else {
-                    uint8 decimals = ERC20(_token1).decimals();
-                    token1Price += (_balance0 * 10 ** decimals) / _balance1;
-                }
+            address pool = factory.getPool(token0, token1, tickSpacings[i]);
+            if (pool == address(0)) continue;
+            uint256 balanceA = _getBalance(token0, pool);
+            uint256 balanceB = _getBalance(token1, pool);
+            if (balanceA == 0 || balanceB == 0) continue;
+            // Calculate price of token A in terms of B
+            uint8 decimalsA = _getDecimals(token0);
+            uint256 priceA = (balanceB * 10 ** decimalsA) / balanceA;
+            uint256 aOut = (_amountIn * priceA) / (10 ** decimalsA);
+            if (aOut > 0) {
+                if (amountOut > 0) successfulIterations += 1;
+                amountOut += aOut;
             }
         }
 
-        uint256 averagePrice = (token1Price * 10000) / divisor; // Handle in a way that captures floating points
-        uint8 token0Decimals = ERC20(token0).decimals();
-        amountOut = (averagePrice * _amountIn) / (10 ** (token0Decimals + 4));
+        amountOut /= successfulIterations;
     }
 
     function _getUnitValueInETH(address token) internal view override returns (uint256 amountOut) {
